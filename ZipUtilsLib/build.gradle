@@ -1,15 +1,25 @@
 plugins {
-    alias(libs.plugins.android.library)
-    id("maven-publish")
+    id 'com.android.library'
+    id 'maven-publish'
 }
-group='com.gitee.pickstars2024'
+group = 'com.gitee.pickstars2024'
 
 android {
     namespace 'top.xinstudio.ziputilslib'
     compileSdk 34
 
+
+    //配合 from components.release 一起使用
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()    //打包代码资源
+            withJavadocJar()    //打包注释文档
+        }
+    }
+
+
     defaultConfig {
-        minSdk 24
+        minSdkVersion 24  // Change this from 16 to 24
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -21,9 +31,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 }
 
@@ -35,3 +47,34 @@ dependencies {
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 }
+
+
+
+
+//jitpack发布模块
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release       //如果这里报错，先注释，构建Gradle结束在解除
+                groupId = 'com.gitee.pickstars2024' //自定义组id
+                artifactId = 'ziputilslib'       //自定义库名
+                version = '1.0.0'  //自定义版号
+            }
+        }
+    }
+
+}
+
+
+//查看 components 内有哪些名字
+task comps {
+    afterEvaluate {
+        publishing {
+            println( "components.name -> " + components.names )
+        }
+    }
+}
+/* 可以不加 */
+task makeJar(type:Jar) {}
+makeJar.dependsOn(build)
