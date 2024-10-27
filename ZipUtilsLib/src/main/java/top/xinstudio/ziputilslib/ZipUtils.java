@@ -1,5 +1,7 @@
 package top.xinstudio.ziputilslib;
 
+import android.os.Handler;
+import android.os.Looper;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.progress.ProgressMonitor;
@@ -35,7 +37,7 @@ public class ZipUtils {
 					while (progressMonitor.getState() == ProgressMonitor.State.BUSY) {
 						int percentDone = progressMonitor.getPercentDone();
 						if (callback != null) {
-							callback.onProgress(percentDone);
+							callback.runOnMainThread(() -> callback.onProgress(percentDone));
 						}
 						try {
 							Thread.sleep(100); // 休眠100毫秒，避免频繁刷新
@@ -44,15 +46,17 @@ public class ZipUtils {
 						}
 					}
 
-					// 解压完成时确保显示100%
 					if (progressMonitor.getResult() == ProgressMonitor.Result.SUCCESS) {
 						if (callback != null) {
-							callback.onProgress(100); // 强制显示100%
-							callback.onSuccess();
+							callback.runOnMainThread(() -> {
+								callback.onProgress(100); // 强制显示100%
+								callback.onSuccess();
+							});
 						}
 					} else if (progressMonitor.getResult() == ProgressMonitor.Result.ERROR) {
 						if (callback != null) {
-							callback.onError(progressMonitor.getException().getMessage());
+							String errorMessage = progressMonitor.getException().getMessage();
+							callback.runOnMainThread(() -> callback.onError(errorMessage));
 						}
 					}
 				}
@@ -61,7 +65,7 @@ public class ZipUtils {
 		} catch (ZipException e) {
 			e.printStackTrace();
 			if (callback != null) {
-				callback.onError(e.getMessage());
+				callback.runOnMainThread(() -> callback.onError(e.getMessage()));
 			}
 		}
 	}
@@ -87,7 +91,7 @@ public class ZipUtils {
 					while (progressMonitor.getState() == ProgressMonitor.State.BUSY) {
 						int percentDone = progressMonitor.getPercentDone();
 						if (callback != null) {
-							callback.onProgress(percentDone);
+							callback.runOnMainThread(() -> callback.onProgress(percentDone));
 						}
 						try {
 							Thread.sleep(100); // 休眠100毫秒，避免频繁刷新
@@ -96,15 +100,17 @@ public class ZipUtils {
 						}
 					}
 
-					// 解压完成时确保显示100%
 					if (progressMonitor.getResult() == ProgressMonitor.Result.SUCCESS) {
 						if (callback != null) {
-							callback.onProgress(100); // 强制显示100%
-							callback.onSuccess();
+							callback.runOnMainThread(() -> {
+								callback.onProgress(100); // 强制显示100%
+								callback.onSuccess();
+							});
 						}
 					} else if (progressMonitor.getResult() == ProgressMonitor.Result.ERROR) {
 						if (callback != null) {
-							callback.onError(progressMonitor.getException().getMessage());
+							String errorMessage = progressMonitor.getException().getMessage();
+							callback.runOnMainThread(() -> callback.onError(errorMessage));
 						}
 					}
 				}
@@ -113,11 +119,10 @@ public class ZipUtils {
 		} catch (ZipException e) {
 			e.printStackTrace();
 			if (callback != null) {
-				callback.onError(e.getMessage());
+				callback.runOnMainThread(() -> callback.onError(e.getMessage()));
 			}
 		}
 	}
-
 
 	/**
 	 * 压缩带密码的压缩文件
@@ -133,7 +138,6 @@ public class ZipUtils {
 			zipFile.setPassword(password.toCharArray());
 			zipFile.setRunInThread(true); // 使用多线程
 
-			// 开始压缩
 			zipFile.addFiles(Collections.singletonList(new File(sourceFilePath)));
 
 			final ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
@@ -141,7 +145,7 @@ public class ZipUtils {
 				while (progressMonitor.getState() == ProgressMonitor.State.BUSY) {
 					int percentDone = progressMonitor.getPercentDone();
 					if (callback != null) {
-						callback.onProgress(percentDone);
+						callback.runOnMainThread(() -> callback.onProgress(percentDone));
 					}
 					try {
 						Thread.sleep(100);
@@ -152,12 +156,15 @@ public class ZipUtils {
 
 				if (progressMonitor.getResult() == ProgressMonitor.Result.SUCCESS) {
 					if (callback != null) {
-						callback.onProgress(100);
-						callback.onSuccess();
+						callback.runOnMainThread(() -> {
+							callback.onProgress(100);
+							callback.onSuccess();
+						});
 					}
 				} else if (progressMonitor.getResult() == ProgressMonitor.Result.ERROR) {
 					if (callback != null) {
-						callback.onError(progressMonitor.getException().getMessage());
+						String errorMessage = progressMonitor.getException().getMessage();
+						callback.runOnMainThread(() -> callback.onError(errorMessage));
 					}
 				}
 			}).start();
@@ -165,11 +172,10 @@ public class ZipUtils {
 		} catch (ZipException e) {
 			e.printStackTrace();
 			if (callback != null) {
-				callback.onError(e.getMessage());
+				callback.runOnMainThread(() -> callback.onError(e.getMessage()));
 			}
 		}
 	}
-
 
 	/**
 	 * 压缩文件
@@ -183,7 +189,6 @@ public class ZipUtils {
 			ZipFile zipFile = new ZipFile(zipFilePath);
 			zipFile.setRunInThread(true); // 使用多线程
 
-			// 开始压缩
 			zipFile.addFiles(Collections.singletonList(new File(sourceFilePath)));
 
 			final ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
@@ -191,7 +196,7 @@ public class ZipUtils {
 				while (progressMonitor.getState() == ProgressMonitor.State.BUSY) {
 					int percentDone = progressMonitor.getPercentDone();
 					if (callback != null) {
-						callback.onProgress(percentDone);
+						callback.runOnMainThread(() -> callback.onProgress(percentDone));
 					}
 					try {
 						Thread.sleep(100);
@@ -202,12 +207,15 @@ public class ZipUtils {
 
 				if (progressMonitor.getResult() == ProgressMonitor.Result.SUCCESS) {
 					if (callback != null) {
-						callback.onProgress(100);
-						callback.onSuccess();
+						callback.runOnMainThread(() -> {
+							callback.onProgress(100);
+							callback.onSuccess();
+						});
 					}
 				} else if (progressMonitor.getResult() == ProgressMonitor.Result.ERROR) {
 					if (callback != null) {
-						callback.onError(progressMonitor.getException().getMessage());
+						String errorMessage = progressMonitor.getException().getMessage();
+						callback.runOnMainThread(() -> callback.onError(errorMessage));
 					}
 				}
 			}).start();
@@ -215,11 +223,10 @@ public class ZipUtils {
 		} catch (ZipException e) {
 			e.printStackTrace();
 			if (callback != null) {
-				callback.onError(e.getMessage());
+				callback.runOnMainThread(() -> callback.onError(e.getMessage()));
 			}
 		}
 	}
-
 
 	public interface Callback {
 		void onProgress(int percentDone);
@@ -227,6 +234,14 @@ public class ZipUtils {
 		void onSuccess();
 
 		void onError(String errorMessage);
-	}
 
+		// 主线程执行的默认方法
+		default void runOnMainThread(Runnable runnable) {
+			if (Looper.myLooper() == Looper.getMainLooper()) {
+				runnable.run();
+			} else {
+				new Handler(Looper.getMainLooper()).post(runnable);
+			}
+		}
+	}
 }
